@@ -8,10 +8,26 @@ import { motion } from 'framer-motion';
 export default function Industry4Website() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setSubmitted(false);
+
+    const res = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.ok) {
+      setSubmitted(true);
+      setEmail('');
+    } else {
+      const data = await res.json();
+      setError(data.error || 'Something went wrong.');
+    }
   };
 
   return (
@@ -64,22 +80,20 @@ export default function Industry4Website() {
       <section className="mt-16 max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-md">
         <h3 className="text-2xl font-semibold text-center mb-4">Stay Updated</h3>
         <p className="text-gray-600 text-center mb-6">Sign up to receive the latest news and updates about Industry 4.0</p>
-        {submitted ? (
-          <p className="text-green-600 text-center">Thank you for subscribing!</p>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Button type="submit" className="flex items-center gap-2">
-              <Mail className="w-4 h-4" /> Subscribe
-            </Button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4">
+          <Input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Button type="submit" className="flex items-center gap-2">
+            <Mail className="w-4 h-4" /> Subscribe
+          </Button>
+        </form>
+        {submitted && <p className="text-green-600 text-center mt-4">Thank you for subscribing!</p>}
+        {error && <p className="text-red-600 text-center mt-4">{error}</p>}
       </section>
     </main>
   );
